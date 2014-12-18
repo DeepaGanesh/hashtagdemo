@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">InstaaShare</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <!-- <string name="client_id">e4df7b182c4d422284041e9fe266c2e0</string> -->
+    <string name="client_id">fb3b686f40c045498c0c8197c9375ecb</string>
+    <string name="client_secret">a3acd8ca41784e7e9df8eca32ab07921</string>
+    
+
+</resources>
