@@ -1,13 +1,26 @@
 package com.share.instatagapp.app;
 
+import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.Message;
+import android.os.StrictMode;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.GridLayout;
 import android.widget.ImageView;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 
-public class InstaActivity extends ActionBarActivity {
+import android.os.Handler;
+
+
+public class InstaActivity extends ActionBarActivity implements View.OnClickListener {
     private static final String AUTHURL = "https://api.instagram.com/oauth/authorize/";
     // Used for Authentication.
     private static final String TOKENURL = "https://api.instagram.com/oauth/access_token";
@@ -19,15 +32,22 @@ public class InstaActivity extends ActionBarActivity {
     // The callback url that we have used while registering the application.
 
     public String authURLString, tokenURLString, client_id, client_secret;
-    public ImageView getSelfie;
+    public static ImageView getSelfie;
+    public static Activity activity;
+    public static String[] data;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_insta);
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+
         client_id = getResources().getString(R.string.client_id);
         client_secret = getResources().getString(R.string.client_secret);
-        getSelfie=(ImageView)findViewById(R.id.setImages);
+        getSelfie = (ImageView) findViewById(R.id.setImages0);
+        activity = this;
         authURLString = AUTHURL
                 + "?client_id="
                 + client_id
@@ -37,36 +57,16 @@ public class InstaActivity extends ActionBarActivity {
         tokenURLString = TOKENURL + "?client_id=" + client_id
                 + "&client_secret=" + client_secret + "&redirect_uri="
                 + CALLBACKURL + "&grant_type=authorization_code";
+
         InstagramApp mApp = new InstagramApp(this,
                 client_id,
                 client_secret,
-                CALLBACKURL,this);
+                CALLBACKURL, this);
         mApp.authorize();
-
-		/*WebView webView = new WebView(getApplicationContext());
-		webView.setVerticalScrollBarEnabled(false);
-		webView.setHorizontalScrollBarEnabled(false);
-		webView.setWebViewClient(new AuthWebViewClient());
-		webView.getSettings().setJavaScriptEnabled(true);
-		webView.loadUrl(authURLString);*/
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.insta, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
+    public void onClick(View view) {
+//TODO perform onclick on the grid imageviews
     }
 }
