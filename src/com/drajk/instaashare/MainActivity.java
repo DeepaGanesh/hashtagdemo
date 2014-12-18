@@ -4,8 +4,7 @@ import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
+import android.widget.ImageView;
 
 public class MainActivity extends ActionBarActivity {
 	private static final String AUTHURL = "https://api.instagram.com/oauth/authorize/";
@@ -19,6 +18,7 @@ public class MainActivity extends ActionBarActivity {
 	// The callback url that we have used while registering the application.
 
 	public String authURLString, tokenURLString, client_id, client_secret;
+	public ImageView getSelfie;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -26,6 +26,7 @@ public class MainActivity extends ActionBarActivity {
 		setContentView(R.layout.activity_main);
 		client_id = getResources().getString(R.string.client_id);
 		client_secret = getResources().getString(R.string.client_secret);
+		getSelfie=(ImageView)findViewById(R.id.setImages);
 		authURLString = AUTHURL
 				+ "?client_id="
 				+ client_id
@@ -38,7 +39,7 @@ public class MainActivity extends ActionBarActivity {
 		InstagramApp mApp = new InstagramApp(this, 
 				client_id, 
 				client_secret, 
-				CALLBACKURL);
+				CALLBACKURL,this);
 		mApp.authorize();
 	    
 		/*WebView webView = new WebView(getApplicationContext());

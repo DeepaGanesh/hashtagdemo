@@ -8,14 +8,19 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.widget.ImageView;
 
 import com.drajk.instaashare.InstagramDialog.OAuthDialogListener;
 
@@ -33,10 +38,14 @@ public class InstagramApp {
 	private String mClientId;
 	private String mClientSecret;
 	
+//	private ImageView mTagImages;
+	private Activity mTagImages;
+	
 
 	private static int WHAT_FINALIZE = 0;
 	private static int WHAT_ERROR = 1;
 	private static int WHAT_FETCH_INFO = 2;
+	private static int WHAT_FETCH_TAG_IMAGE = 3;
 
 	/**
 	 * Callback url, as set in 'Manage OAuth Costumers' page
@@ -51,7 +60,7 @@ public class InstagramApp {
 	private static final String TAG = "Instaashare";
 
 	public InstagramApp(Context context, String clientId, String clientSecret,
-			String callbackUrl) {
+			String callbackUrl,Activity tagImageView) {
 		
 		mClientId = clientId;
 		mClientSecret = clientSecret;
@@ -63,6 +72,7 @@ public class InstagramApp {
 				+ clientSecret + "&redirect_uri=" + mCallbackUrl + "&grant_type=authorization_code";
 		mAuthUrl = AUTH_URL + "?client_id=" + clientId + "&redirect_uri="
 				+ mCallbackUrl + "&response_type=code&display=touch&scope=likes+comments+relationships";
+		mTagImages=tagImageView;
 		
 		OAuthDialogListener listener = new OAuthDialogListener() {
 			@Override
@@ -136,16 +146,17 @@ public class InstagramApp {
 			@Override
 			public void run() {
 				Log.i(TAG, "Fetching user info");
-				int what = WHAT_FINALIZE;
+				int what = WHAT_FETCH_TAG_IMAGE;
 				try {
 					URL url = new URL(API_URL + "/users/" + mSession.getId() + "/?access_token=" + mAccessToken);
 
-					Log.d(TAG, "Opening URL " + url.toString());
+					Log.d(TAG, "Opening URL fetching user infor " + url.toString());
 					HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
 					urlConnection.setRequestMethod("GET");
 					urlConnection.setDoInput(true);
-					urlConnection.setDoOutput(true);
+					//urlConnection.setDoOutput(true);
 					urlConnection.connect();
+					System.out.println("getting urlconnections "+urlConnection.getResponseMessage());
 					String response = streamToString(urlConnection.getInputStream());
 					System.out.println("getting username "+response);
 					JSONObject jsonObj = (JSONObject) new JSONTokener(response).nextValue();
@@ -162,6 +173,60 @@ public class InstagramApp {
 		}.start();	
 		
 	}
+	private void fetchPicWithTag() {
+		mProgress.setMessage("Fetching tag pics ...");
+		
+		new Thread() {
+			@Override
+			public void run() {
+				Log.i(TAG, "Fetching pic info matching tag");
+				int what = WHAT_FINALIZE;
+				try {
+					URL url = new URL(API_URL + "/tags/selfie/media/recent?access_token=" + mAccessToken);
+//https://api.instagram.com/v1/tags/selfie/media/recent?access_token=1543176444.fb3b686.0c77fd93775b4581ab4807a2f1806858
+					Log.d(TAG, "Opening URL  for getting images " + url.toString());
+					HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+					urlConnection.setRequestMethod("GET");
+					urlConnection.setDoInput(true);
+					//urlConnection.setDoOutput(true);
+					urlConnection.connect();
+					System.out.println("getting urlconnections "+urlConnection.getResponseMessage());
+					String response = streamToString(urlConnection.getInputStream());
+					System.out.println("getting username "+response);
+					JSONObject jsonObj = (JSONObject) new JSONTokener(response).nextValue();
+					JSONArray dataObj = jsonObj.getJSONArray("data");
+					String[] tagImages = new String[dataObj.length()];
+					for(int i=0;i<dataObj.length();i++){
+					tagImages[i]=dataObj.getJSONObject(0).getJSONObject("images").getJSONObject("thumbnail").getString("url");
+					}
+					//String bio = jsonObj.getJSONObject("data").getString("bio");
+					Log.i(TAG, "Got pic: " + tagImages[1]);
+					URL newurl = new URL(tagImages[1]); 
+					final Bitmap mIcon;
+					
+					//getImages=(ImageView)mCtx.getResources().getLayout(R.layout.activity_main);
+					mIcon = BitmapFactory.decodeStream(newurl.openConnection() .getInputStream());
+					mTagImages.runOnUiThread(new Runnable(){
+						
+						public void run(){
+							final ImageView getImages=(ImageView)mTagImages.findViewById(R.id.setImages);
+							getImages.setImageBitmap(mIcon);
+						}
+					});
+					
+					
+				
+				} catch (Exception ex) {
+					what = WHAT_ERROR;
+					ex.printStackTrace();
+				}
+
+				mHandler.sendMessage(mHandler.obtainMessage(what, 2, 0));
+			}
+		}.start();	
+		
+	}
+
 
 
 	private Handler mHandler = new Handler() {
@@ -178,14 +243,17 @@ public class InstagramApp {
 			} 
 			else if(msg.what == WHAT_FETCH_INFO) {
 				fetchUserName();
+			}else if(msg.what == WHAT_FETCH_TAG_IMAGE) {
+				fetchPicWithTag();
 			}
 			else {
 				mProgress.dismiss();
-				mListener.onSuccess();
+				//mListener.onSuccess();
 			}
 		}
+		
 	};
-
+	
 	public boolean hasAccessToken() {
 		return (mAccessToken == null) ? false : true;
 	}
@@ -234,6 +302,7 @@ public class InstagramApp {
 			}
 
 			str = sb.toString();
+			System.out.println("strrringggg "+str);
 		}
 
 		return str;
